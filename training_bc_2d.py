@@ -12,10 +12,11 @@ import pytorch_lightning as pl
 import csv
 import fire 
 
-LR = 3e-4 #1e-3
 
 import torch.nn as nn 
 import torch.nn.functional as F
+
+LR = 3e-4 #1e-3
 
 
 # pytorch lightning module
