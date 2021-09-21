@@ -53,9 +53,9 @@ class ImplicitBCDataset_2D(Dataset):
 
         results = dict()
 
-        img = np.ones((self.height, self.width, 3), dtype=np.float)
+        img = np.ones((self.height, self.width, 3), dtype=np.uint8)*255
         x, y = self.keypts_xy[idx]
-        img[y, x, :] = 0 
+        img = cv2.circle(np.ascontiguousarray(img), (int(x), int(y)), radius=4, color=(255,0,0), thickness=-1)
 
         normalised_x = float(x)/self.width
         normalised_y = float(y)/self.height
