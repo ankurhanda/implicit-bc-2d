@@ -29,8 +29,8 @@ class ImplicitBCDataset_2D(Dataset):
         offset = 20
         for i in range(self.dataset_size):
 
-            x = np.random.randint(self.img_size[1]/2-offset, self.img_size[1]/2+offset)
-            y = np.random.randint(self.img_size[0]/2-offset, self.img_size[0]/2+offset)
+            x = np.random.randint(self.width/2-offset, self.width/2+offset)
+            y = np.random.randint(self.height/2-offset, self.height/2+offset)
 
             self.keypts_xy.append([x, y])
 
