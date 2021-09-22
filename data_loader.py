@@ -62,14 +62,12 @@ class ImplicitBCDataset_2D(Dataset):
 
         results['images'] = self.transform(img) 
 
-        results['annotations'] = [x, y]
-        results['normalised_annotations'] = [2*normalised_x-1, 2*normalised_y-1]
+        results['annotations'] = np.array([x, y], dtype=np.float32)
+        results['normalised_annotations'] = np.array([2*normalised_x-1, 2*normalised_y-1], dtype=np.float32)
 
         return results
 
 if __name__ == "__main__":
-
-    from PIL import Image
 
     implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=10,
                                                   img_size=(128, 128))
