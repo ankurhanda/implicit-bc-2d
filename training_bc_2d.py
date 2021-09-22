@@ -34,39 +34,6 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
     
     def forward(self, images):
         return self.learner(images)
-    
-    # def plot_ground_truth(self, heatmaps, annotated_images):
-
-    #     import cv2 
-    #     while True:
-
-    #         myheatmaps = heatmaps.cpu().numpy()
-    #         myheatmaps = myheatmaps.reshape(2, 3, self.num_keypoints, 30, 40) #(b, num_cam, num_heatmaps, 30, 40)
-            
-    #         for b in range(0, 2):
-    #             for cam in range(0, 3):
-    #                 img = (annotated_images[b, cam].permute(1, 2, 0).detach() * 255.0).to('cpu').numpy()
-    #                 img = img.copy()
-    #                 img = cv2.resize(img, (40, 30), cv2.INTER_LINEAR)
-
-    #                 for count in range(0, self.num_keypoints):
-
-    #                     curr_heatmap = (myheatmaps[b][cam][count].copy()*255.0)
-
-    #                     my_img = img + curr_heatmap.reshape(30, 40, 1)
-    #                     my_img = np.clip(my_img, 0, 255)
-    #                     my_img = my_img.astype('uint8').copy()
-
-    #                     cv2.imshow('image',my_img)
-    #                     import time
-    #                     time.sleep(2.01)
-    #                     k = cv2.waitKey(10)
-    #                     # Press q to break
-    #                     if k == ord('q'):
-    #                         break
-        
-    #     return
-
 
     def training_step(self, batch, batch_idx):    
         
