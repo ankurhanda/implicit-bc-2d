@@ -1,6 +1,38 @@
 import torch
 import torch.nn as nn
 
+from dataclasses import dataclass, field 
+
+@dataclass(eq=False) #PyTorch raises error if eq is set to True. You cannot compare two classes with = operator anymore now.
+class spatial_softmax_2d(nn.Module):
+
+    heatmap_width: int 
+    heatmap_height: int 
+    epsilon: float = field(default=1e-8)
+    
+    def __post_init__(self):
+        super().__init__()
+        
+        r_y = torch.arange(0, self.heatmap_height, 1.0) / (self.heatmap_height - 1) * 2 - 1
+        r_x = torch.arange(0, self.heatmap_width, 1.0) / (self.heatmap_width - 1) * 2 - 1
+        
+        rany, ranx = torch.meshgrid(-r_y, r_x)   # ranx left -1, right 1, rany top 1, bottom -1
+        
+        self.register_buffer("ranx", torch.FloatTensor(ranx).clone())
+        self.register_buffer("rany", torch.FloatTensor(rany).clone())
+
+        
+
+    def forward(self, heatmap_logits):
+
+        heatmap = nn.functional.softmax(heatmap_logits.reshape(-1, self.heatmap_width * self.heatmap_height), dim=1)
+        heatmap = heatmap.reshape(-1, self.heatmap_height, self.heatmap_width)
+
+        heatmap = heatmap / (torch.sum(heatmap, dim=(1, 2), keepdim=True) + self.epsilon)
+        sx = torch.sum(heatmap * self.ranx[None], dim=(1, 2))
+        sy = torch.sum(heatmap * self.rany[None], dim=(1, 2))
+        xy_normalized = torch.stack([sx, sy], 1)
+        return xy_normalized
 
 class BaseCNN(nn.Module):
     def __init__(self, in_channels):
@@ -19,15 +51,22 @@ class BaseCNN(nn.Module):
             nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
         )
 
+        self.spatial_softmax = spatial_softmax_2d(heatmap_width=16, heatmap_height=16)
+
         self.mlp = nn.Sequential(
-            nn.Linear(128, 2)
+            nn.Linear(256, 2)
         )
 
     def forward(self, x):
+        batch_size = x.shape[0]
+
         out = self.cnn(x)
 
+        out = self.spatial_softmax(out)
+        out = out.view(batch_size, -1)
+
         # do global average pooling 
-        out = torch.mean(out, [2, 3])
+        # out = torch.mean(out, [2, 3])
 
         # do MLP 
         out = self.mlp(out)

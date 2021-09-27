@@ -20,14 +20,20 @@ def set_seed(seed=91):
 
 @dataclass 
 class ImplicitBCDataset_2D(Dataset):
+
     dataset_size: int
     img_size: Tuple[int, int] 
+    fixed_seed:bool = field(default=False)
+    mode: str = field(default='train')
 
     def __post_init__(self):
         super(ImplicitBCDataset_2D).__init__()
         
         self.height       = self.img_size[0]
         self.width        = self.img_size[1]
+
+        if self.fixed_seed:
+            set_seed(seed=91)
 
         '''
         Generate possible random keypoint locations 
@@ -36,11 +42,20 @@ class ImplicitBCDataset_2D(Dataset):
         offset = 20
         for i in range(self.dataset_size):
 
-            x = np.random.randint(self.width/2-offset, self.width/2+offset)
-            y = np.random.randint(self.height/2-offset, self.height/2+offset)
+            x = np.random.rand(1)
+            y = np.random.rand(1)
+            
+            # import ipdb; ipdb.set_trace();
+
+            x = int(x * self.width -1)
+            y = int(y * self.height-1)
+
+            # x = np.random.randint(self.width/2-offset, self.width/2+offset)
+            # y = np.random.randint(self.height/2-offset, self.height/2+offset)
 
             self.keypts_xy.append([x, y])
 
+        np.savetxt('{}_dataset.txt'.format(self.mode), np.array(self.keypts_xy))
         print(self.keypts_xy)
 
         self.transform = transforms.Compose([
