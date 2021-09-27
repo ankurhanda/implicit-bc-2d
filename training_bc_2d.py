@@ -88,7 +88,7 @@ def run(mode):
     implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=10,
                                                   img_size=(128, 128))
 
-    EPOCHS = 100 
+    EPOCHS = 150 
 
     if mode == 'train':
             
@@ -100,13 +100,13 @@ def run(mode):
 
         # import ipdb; ipdb.set_trace();                                        
 
-        # checkpoint_callback = ModelCheckpoint(
-        #     monitor='loss_train',
-        #     dirpath='trained_keypoint3d_models/views_{}/skip_frames_{}'.format(NUM_VIEWS, SKIP_FRAMES),
-        #     filename="sample-loss-{epoch:03d}",
-        #     save_top_k=5,
-        #     save_weights_only=True
-        #     )
+        checkpoint_callback = ModelCheckpoint(
+            monitor='loss_train',
+            dirpath='trained_models',
+            filename="sample-loss-{epoch:03d}",
+            save_top_k=5,
+            save_weights_only=True
+            )
 
         from pytorch_lightning.plugins import DDPPlugin
 
@@ -116,26 +116,56 @@ def run(mode):
                 accumulate_grad_batches = 1,
                 stochastic_weight_avg=True,
                 plugins=DDPPlugin(find_unused_parameters=True),
-                #distributed_backend='ddp',
-                # callbacks=[checkpoint_callback]
+                # distributed_backend='ddp',
+                callbacks=[checkpoint_callback]
             )
 
         trainer.fit(model, train_loader) #, val_loader)
     
-    # elif mode == 'test':
+    elif mode == 'test':
 
-    #     model_path = 'trained_keypoint3d_models/views_{}/skip_frames_{}/129/sample-loss-epoch=129.ckpt'.format(NUM_VIEWS, SKIP_FRAMES)
-    #     print('****** testing model ', model_path)
+        model_path = 'trained_models/sample-loss-epoch=144.ckpt'
+        print('****** testing model ', model_path)
 
-
-    #     model = KeyPointDexPilot3DLearner.load_from_checkpoint(model_path,**input_arguments)   
-    #     test_loader = DataLoader(dex_learn_dataset, batch_size=1, 
-    #                                     num_workers=12, shuffle=False, 
-    #                                     pin_memory=True, drop_last=False)
+        implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
+                                                  img_size=(128, 128))
 
 
-    #     model = model.cuda()
-    #     model.eval()
+        model = ImplicitBC_2d_Learner.load_from_checkpoint(model_path)   
+        test_loader = DataLoader(implicit_bc_dataset_2d, batch_size=1, 
+                                        num_workers=12, shuffle=False, 
+                                        pin_memory=True, drop_last=False)
+
+
+        model = model.cuda()
+        model.eval()
+
+        preds = []
+
+        for count, elem in enumerate(test_loader):
+
+            with torch.no_grad():
+
+                images = elem['images'].cuda()
+                xy_pred_normalised = model(images)
+                xy_pred = xy_pred_normalised.cpu().detach().numpy()
+                xy_pred = (xy_pred+1)/2.0 * 128 
+
+                xy_gt = elem['annotations'].cpu().detach().numpy()
+
+                err = np.linalg.norm(xy_pred - xy_gt)
+
+                if err <= 1.0:
+                    print(err)
+
+                preds.append([xy_gt[0][0], xy_gt[0][1], err])
+
+
+        preds = np.array(preds)
+        np.savetxt('vanilla_coords_pred.txt', preds)
+
+
+
 
     #     # which_demos = dex_learn_dataset.get_demo_ids()
     #     # which_demos = which_demos[0] if len(which_demos) == 1 else which_demos[0]

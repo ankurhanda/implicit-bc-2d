@@ -1,7 +1,7 @@
 import os.path as osp
 import numpy as np
 from torch.utils.data import Dataset
-# from dataclasses import dataclass
+from dataclasses import dataclass, field 
 
 import torch
 from torchvision import transforms
@@ -9,18 +9,21 @@ from torchvision import transforms
 import cv2 
 from typing import List, Tuple
 
+@dataclass 
 class ImplicitBCDataset_2D(Dataset):
+    dataset_size: int
+    img_size: Tuple[int, int] 
+    # height: int = field(init=False)
+    # width: int = field(init=False)
 
     #TODO: move to dataclass or attrs 
-    def __init__(self, 
-                 dataset_size: int, 
-                 img_size: Tuple[int, int]):
+    def __post_init__(self):
+        super(ImplicitBCDataset_2D).__init__()
         
-        self.dataset_size = dataset_size
-        self.img_size     = img_size 
-
         self.height       = self.img_size[0]
         self.width        = self.img_size[1]
+
+        print(self.height, self.width)
 
         '''
         Generate possible random keypoint locations 
