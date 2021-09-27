@@ -124,7 +124,7 @@ def run(mode):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=042.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=048.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
@@ -166,103 +166,6 @@ def run(mode):
         preds = np.array(preds)
         np.savetxt('vanilla_coords_pred.txt', preds)
 
-
-
-
-    #     # which_demos = dex_learn_dataset.get_demo_ids()
-    #     # which_demos = which_demos[0] if len(which_demos) == 1 else which_demos[0]
-    #     # print('held-out trajectories: ', which_demos)
-
-    #     entered = False 
-
-    #     #TODO: Fix this for multiple held out trajectories
-    #     for count, elem in enumerate(test_loader):
-            
-    #         demo_id = elem['img_info']['demo_id'].cpu().detach().numpy()
-    #         img_id  = elem['img_info']['image_id'].cpu().detach().numpy()
-
-    #         with torch.no_grad():
-
-    #             source_views = elem['images']
-    #             # source_views = elem['annotated_images']
-
-    #             imgs0 = source_views["view_0"].clone().detach().unsqueeze(1)
-    #             imgs1 = source_views["view_1"].clone().detach().unsqueeze(1)
-    #             imgs2 = source_views["view_2"].clone().detach().unsqueeze(1)
-
-    #             # import ipdb; ipdb.set_trace();
-
-    #             # '''
-    #             # get ground truth keypoints 
-    #             # '''
-    #             # keypoint_annotations = elem['keypoint_annotations']
-
-    #             # keypts0 = keypoint_annotations['keypoints_view_0'].detach()
-    #             # keypts1 = keypoint_annotations['keypoints_view_1'].detach()
-    #             # keypts2 = keypoint_annotations['keypoints_view_2'].detach()
-
-    #             # keypoints = torch.cat([keypts0, keypts1, keypts2], dim=1)
-    #             # keypoints = keypoints.cpu().numpy()
-                
-
-    #             sources = torch.cat([imgs0, imgs1, imgs2], dim=1).cuda()
-
-    #             xyzs_world, loss_dict, heatmaps_hat, xy_normalized = model.forward(sources)
-
-    #             batch_size, num_cam, _, h, w = sources.shape 
-
-    #             heatmaps_hat = heatmaps_hat.clone()
-    #             heatmaps_hat = heatmaps_hat.reshape(-1, 30, 40)
-    #             xy = model.learner.heatmap_to_xy(heatmaps_hat)
-    #             xy = xy.reshape(batch_size, num_cam, input_arguments['num_keypoints'], 2)
-    #             xy = (xy+1)/2 
-    #             xy = xy.to('cpu').detach().numpy()
-    #             img = sources.clone().permute(0, 1, 3, 4, 2).cpu().detach().numpy()
-        
-    #             canvases = []
-
-    #             for b in range(0, batch_size):
-    #                 curr_canvas = []
-    #                 for c in range(0, num_cam):
-    #                     curr_img = (img[b, c].copy()*255.0).astype('uint8')
-                        
-    #                     for (x, y) in xy[b][c]:
-    #                         colour=(255.0, 0, 0)
-    #                         cv2.circle(curr_img, (int(x*320),int(y*240)), 3, colour, -1)
-                        
-    #                     # for (kx, ky) in keypoints[b][c]:
-    #                     #     if kx > 0 and ky > 0:
-    #                     #         colour=(0.0, 255.0, 0)
-    #                     #         cv2.circle(curr_img, (int(kx),int(ky)), 2, colour, -1)
-
-    #                     curr_canvas.append(curr_img)
-
-    #                 curr_canvas = np.array(curr_canvas)
-    #                 curr_canvas = np.concatenate(curr_canvas, axis=1)
-
-    #                 canvases.append(curr_canvas.copy())
-
-    #             canvases = np.array(canvases)
-    #             # import ipdb; ipdb.set_trace();
-    #             cv2.imwrite('keypoint_results/keypoint_results_{:04d}.png'.format(count), canvases[0][...,::-1])
-    #             print(count, '  files written out of ...   ', dex_learn_dataset.__len__())
-    #             # import ipdb; ipdb.set_trace();
-
-
-
-    #             for b in range(0, batch_size):
-    #                 for c in range(0, num_cam):
-    #                     dirName = 'keypoints2d/sugar_box_lift' + str(demo_id[0]) + '/color{}'.format(c+1)
-    #                     if not os.path.exists(dirName):
-    #                         os.makedirs(dirName)
-
-    #                     keypts =[]
-    #                     for (x, y) in xy[b][c]:
-    #                         kpt_x, kpt_y = int(x*320),int(y*240)
-    #                         keypts.append([kpt_x, kpt_y])
-                        
-    #                     fileName = dirName + '/keypoints2d_{:04d}.txt'.format(img_id[0])
-    #                     np.savetxt(fileName, np.array(keypts))
 
 if __name__ == "__main__":
     fire.Fire(run)
