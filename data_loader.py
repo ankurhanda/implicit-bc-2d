@@ -13,17 +13,12 @@ from typing import List, Tuple
 class ImplicitBCDataset_2D(Dataset):
     dataset_size: int
     img_size: Tuple[int, int] 
-    # height: int = field(init=False)
-    # width: int = field(init=False)
 
-    #TODO: move to dataclass or attrs 
     def __post_init__(self):
         super(ImplicitBCDataset_2D).__init__()
         
         self.height       = self.img_size[0]
         self.width        = self.img_size[1]
-
-        print(self.height, self.width)
 
         '''
         Generate possible random keypoint locations 
