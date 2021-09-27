@@ -9,6 +9,15 @@ from torchvision import transforms
 import cv2 
 from typing import List, Tuple
 
+def set_seed(seed=91):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
 @dataclass 
 class ImplicitBCDataset_2D(Dataset):
     dataset_size: int
@@ -67,6 +76,7 @@ class ImplicitBCDataset_2D(Dataset):
 
 if __name__ == "__main__":
 
+    set_seed(seed=91)
     implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=10,
                                                   img_size=(128, 128))
 
