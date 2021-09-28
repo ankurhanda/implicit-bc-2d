@@ -113,8 +113,7 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
         ):
 
         for pg in optimizer.param_groups:
-            pg['lr'] = (1 - 0.9*min(float(epoch), 2e3)/2e3) * self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
-            #pg['lr'] = (-0.009*float(epoch)+1)* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 100 epochs
+            pg['lr'] = 0.5**( np.floor(epoch/200.0) )* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
             # print(pg['lr'], 'learning rate')
         # update params
         optimizer.step(closure=optimizer_closure)
@@ -173,7 +172,7 @@ def run(mode):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=602.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=1350.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
@@ -279,6 +278,7 @@ def run(mode):
                     xy_gt = elem['annotations'].cpu().detach().numpy()
 
                     err = np.linalg.norm(xy_pred - xy_gt)
+                    # err = err * err / 2.0 
 
                     if err <= 1.0:
                         good_preds += 1 

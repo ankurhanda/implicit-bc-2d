@@ -12,7 +12,7 @@ y = y.astype(int)
 
 err = pred_data[:, 2]
 
-idx = np.where(err<=3.0)
+idx = np.where(err<=2.0)
 err[idx] = 0 
 
 c = err / np.amax(err)
