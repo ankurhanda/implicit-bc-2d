@@ -23,7 +23,7 @@ class ImplicitBCDataset_2D(Dataset):
 
     dataset_size: int
     img_size: Tuple[int, int] 
-    fixed_seed:bool = field(default=False)
+    fixed_seed:bool = field(default=True)
     mode: str = field(default='train')
     neg_pairs: float = field(default=99) # it will be 9 + 1 positive pair 
  

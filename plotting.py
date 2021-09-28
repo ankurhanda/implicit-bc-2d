@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt #
 import numpy as np
 
 pred_data = np.loadtxt('vanilla_coords_pred.txt')
+# pred_data = np.loadtxt('implicit_trained_models/vanilla_coords_pred.txt')
 
 x = pred_data[:, 0]
 x = x.astype(int)
@@ -11,7 +12,7 @@ y = y.astype(int)
 
 err = pred_data[:, 2]
 
-idx = np.where(err<=5.0)
+idx = np.where(err<=3.0)
 err[idx] = 0 
 
 c = err / np.amax(err)
@@ -23,7 +24,7 @@ colours = np.zeros((len(err), 4))
 colours[:, 3] = 1 
 
 colours[:, 0] = 1-c 
-colours[:, 3] = c 
+colours[:, 3] = np.minimum(c/2.0, 1.0)
 
 colours[idx, 0] = 0
 colours[idx, 1] = 0
@@ -35,6 +36,7 @@ print(np.amin(err), np.amax(err), len(err[idx]))
 plt.scatter(x, y, c=colours, s=20)
 
 training_data = np.loadtxt('train_dataset.txt')
+# training_data = np.loadtxt('implicit_trained_models/train_dataset.txt')
 
 x = training_data[:,0].astype(int)
 y = training_data[:,1].astype(int)

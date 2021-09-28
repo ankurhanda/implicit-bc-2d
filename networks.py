@@ -52,7 +52,9 @@ class BaseCNN(nn.Module):
         self.spatial_softmax = spatial_softmax_2d(heatmap_width=16, heatmap_height=16)
 
         self.mlp = nn.Sequential(
-            nn.Linear(256, 2)
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Linear(64, 2)
         )
 
     def forward(self, x):
@@ -100,15 +102,15 @@ class ImplicitCNN(BaseCNN):
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
             nn.ReLU(),
-            nn.Conv2d(64, 32, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(64, 256, kernel_size=3, stride=2, padding=1),
         )
 
         self.spatial_softmax = spatial_softmax_2d(heatmap_width=16, heatmap_height=16)
 
         self.mlp = nn.Sequential(
-            nn.Linear(2*32+2, 64),
+            nn.Linear(2*256+2, 512),
             nn.ReLU(),
-            nn.Linear(64, 1)
+            nn.Linear(512, 1)
         )
 
     def forward(self, x, coords):
