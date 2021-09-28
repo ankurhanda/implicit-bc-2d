@@ -25,7 +25,8 @@ class ImplicitBCDataset_2D(Dataset):
     img_size: Tuple[int, int] 
     fixed_seed:bool = field(default=False)
     mode: str = field(default='train')
-
+    neg_pairs: float = field(default=99) # it will be 9 + 1 positive pair 
+ 
     def __post_init__(self):
         super(ImplicitBCDataset_2D).__init__()
         
@@ -77,7 +78,7 @@ class ImplicitBCDataset_2D(Dataset):
 
         img = np.ones((self.height, self.width, 3), dtype=np.uint8)*255
         x, y = self.keypts_xy[idx]
-        img = cv2.circle(np.ascontiguousarray(img), (int(x), int(y)), radius=4, color=(255,0,0), thickness=-1)
+        img = cv2.circle(np.ascontiguousarray(img), (int(x), int(y)), radius=8, color=(255,0,0), thickness=-1)
 
         normalised_x = float(x)/self.width
         normalised_y = float(y)/self.height
@@ -86,6 +87,9 @@ class ImplicitBCDataset_2D(Dataset):
 
         results['annotations'] = np.array([x, y], dtype=np.float32)
         results['normalised_annotations'] = np.array([2*normalised_x-1, 2*normalised_y-1], dtype=np.float32)
+
+        xy_neg = np.random.rand(self.neg_pairs, 2)
+        results['normalised_negatives'] = np.array(2*xy_neg-1.0, dtype=np.float32)
 
         return results
 

@@ -20,9 +20,7 @@ class spatial_softmax_2d(nn.Module):
         
         self.register_buffer("ranx", torch.FloatTensor(ranx).clone())
         self.register_buffer("rany", torch.FloatTensor(rany).clone())
-
         
-
     def forward(self, heatmap_logits):
 
         heatmap = nn.functional.softmax(heatmap_logits.reshape(-1, self.heatmap_width * self.heatmap_height), dim=1)
@@ -88,3 +86,44 @@ class BaseCNN(nn.Module):
             return (output.shape[-2], output.shape[-1])
         return output.shape[-1]
 
+class ImplicitCNN(BaseCNN):
+
+    def __init__(self, in_channels):
+        super(ImplicitCNN, self).__init__(in_channels)
+
+        self.build_model()
+
+    def build_model(self):
+
+        self.cnn = nn.Sequential(
+            nn.Conv2d(self.in_channels, 32, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(64, 32, kernel_size=3, stride=2, padding=1),
+        )
+
+        self.spatial_softmax = spatial_softmax_2d(heatmap_width=16, heatmap_height=16)
+
+        self.mlp = nn.Sequential(
+            nn.Linear(2*32+2, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1)
+        )
+
+    def forward(self, x, coords):
+        batch_size = x.shape[0]
+        coords_batch_size = coords.shape[0]
+
+        out = self.cnn(x)
+
+        out = self.spatial_softmax(out)
+        out = out.view(batch_size, -1)
+
+        out_tile = out.tile((coords_batch_size, 1))
+        out = torch.cat((out_tile, coords), dim=1)
+
+        out = self.mlp(out)
+        out = out.view(1, -1)
+
+        return out

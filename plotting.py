@@ -11,7 +11,7 @@ y = y.astype(int)
 
 err = pred_data[:, 2]
 
-idx = np.where(err<=1.0)
+idx = np.where(err<=5.0)
 err[idx] = 0 
 
 c = err / np.amax(err)
@@ -19,8 +19,16 @@ c = c/2.0 + 0.5
 
 c[idx] = 0
 
-colours = np.zeros((len(err), 3))
+colours = np.zeros((len(err), 4))
+colours[:, 3] = 1 
+
 colours[:, 0] = 1-c 
+colours[:, 3] = c 
+
+colours[idx, 0] = 0
+colours[idx, 1] = 0
+colours[idx, 2] = 1
+colours[idx, 3] = 1 
 
 print(np.amin(err), np.amax(err), len(err[idx]))
 
