@@ -113,7 +113,8 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
         ):
 
         for pg in optimizer.param_groups:
-            pg['lr'] = 0.5**( np.floor(epoch/200.0) )* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
+            # pg['lr'] = 0.5**( np.floor(epoch/200.0) )* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
+            pg['lr'] = 0.7**( np.floor(epoch/200.0) )* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
             # print(pg['lr'], 'learning rate')
         # update params
         optimizer.step(closure=optimizer_closure)
@@ -172,7 +173,7 @@ def run(mode):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=1331.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=494.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
@@ -223,7 +224,7 @@ def run(mode):
                     prediction = torch.sum(values * top_k_coords, dim=0)
 
                     
-                    # for i in range(0, 3):
+                    # for i in range(0, 10):
 
                     #     # x = np.random.normal(mu[0], std[0], 16384)
                     #     # y = np.random.normal(mu[1], std[1], 16384)
@@ -263,10 +264,10 @@ def run(mode):
                         
                     #     prediction = top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
 
-                        # top_k_coords_01 = (top_k_coords.clone()+1)/2.0
-                        # # import ipdb; ipdb.set_trace();
-                        # mu = torch.mean(top_k_coords_01, dim=0).cpu().detach().numpy()
-                        # std= torch.std(top_k_coords_01, dim=0).cpu().detach().numpy()
+                    #     # top_k_coords_01 = (top_k_coords.clone()+1)/2.0
+                    #     # # import ipdb; ipdb.set_trace();
+                    #     # mu = torch.mean(top_k_coords_01, dim=0).cpu().detach().numpy()
+                    #     # std= torch.std(top_k_coords_01, dim=0).cpu().detach().numpy()
                         
                         
 

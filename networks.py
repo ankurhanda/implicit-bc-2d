@@ -99,8 +99,10 @@ class ImplicitCNN(BaseCNN):
 
         self.cnn = nn.Sequential(
             nn.Conv2d(self.in_channels, 32, kernel_size=3, stride=2, padding=1),
+            # nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            # nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Conv2d(64, 256, kernel_size=3, stride=2, padding=1),
         )
@@ -112,6 +114,7 @@ class ImplicitCNN(BaseCNN):
 
         self.mlp = nn.Sequential(
             nn.Linear(128, 64),
+            # nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Linear(64, 1)
         )

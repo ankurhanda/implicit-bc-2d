@@ -41,22 +41,27 @@ class ImplicitBCDataset_2D(Dataset):
         '''
         self.keypts_xy = []
         offset = 20
-        for i in range(self.dataset_size):
+        if self.mode == 'train':
+            self.keypts_xy = np.loadtxt('training_dataset.txt')
+        else:
 
-            x = np.random.rand(1)
-            y = np.random.rand(1)
-            
-            # import ipdb; ipdb.set_trace();
+            for i in range(self.dataset_size):
 
-            x = int(x * self.width -1)
-            y = int(y * self.height-1)
+                x = np.random.rand(1)
+                y = np.random.rand(1)
+                
+                # import ipdb; ipdb.set_trace();
 
-            # x = np.random.randint(self.width/2-offset, self.width/2+offset)
-            # y = np.random.randint(self.height/2-offset, self.height/2+offset)
+                x = int(x * self.width -1)
+                y = int(y * self.height-1)
 
-            self.keypts_xy.append([x, y])
+                # x = np.random.randint(self.width/2-offset, self.width/2+offset)
+                # y = np.random.randint(self.height/2-offset, self.height/2+offset)
 
-        np.savetxt('{}_dataset.txt'.format(self.mode), np.array(self.keypts_xy))
+                self.keypts_xy.append([x, y])
+
+            np.savetxt('{}_dataset.txt'.format(self.mode), np.array(self.keypts_xy))
+        
         print(self.keypts_xy)
 
         self.transform = transforms.Compose([

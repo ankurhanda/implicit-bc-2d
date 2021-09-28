@@ -35,7 +35,7 @@ print(np.amin(err), np.amax(err), len(err[idx]))
 
 plt.scatter(x, y, c=colours, s=20)
 
-training_data = np.loadtxt('train_dataset.txt')
+training_data = np.loadtxt('training_dataset.txt')
 # training_data = np.loadtxt('implicit_trained_models/train_dataset.txt')
 
 x = training_data[:,0].astype(int)
