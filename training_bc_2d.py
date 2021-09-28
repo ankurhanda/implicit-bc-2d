@@ -100,24 +100,24 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)
 
-    # def optimizer_step(
-    #         self,
-    #         epoch,
-    #         batch_idx,
-    #         optimizer,
-    #         optimizer_idx,
-    #         optimizer_closure,
-    #         on_tpu=False,
-    #         using_native_amp=False,
-    #         using_lbfgs=False,
-    #     ):
+    def optimizer_step(
+            self,
+            epoch,
+            batch_idx,
+            optimizer,
+            optimizer_idx,
+            optimizer_closure,
+            on_tpu=False,
+            using_native_amp=False,
+            using_lbfgs=False,
+        ):
 
-    #     for pg in optimizer.param_groups:
-    #         pg['lr'] = (1 - 0.9*min(float(epoch), 2e3)/2e3) * self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
-    #         #pg['lr'] = (-0.009*float(epoch)+1)* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 100 epochs
-    #         # print(pg['lr'], 'learning rate')
-    #     # update params
-    #     optimizer.step(closure=optimizer_closure)
+        for pg in optimizer.param_groups:
+            pg['lr'] = (1 - 0.9*min(float(epoch), 2e3)/2e3) * self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 1000 epochs
+            #pg['lr'] = (-0.009*float(epoch)+1)* self.lr #decrease the learning rate from 1e-4 to 1e-5 over the course of 100 epochs
+            # print(pg['lr'], 'learning rate')
+        # update params
+        optimizer.step(closure=optimizer_closure)
 
 
 
@@ -173,7 +173,7 @@ def run(mode):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=2154.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=602.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
@@ -205,65 +205,64 @@ def run(mode):
 
                     x = np.random.rand(16384)
                     y = np.random.rand(16384)
+                    
+                    coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
+                    coords = coords.reshape(-1, 2)
+                    coords = torch.from_numpy(coords).cuda()
+
+                    energy = model(images, coords)
+                    energy = energy * -1.0 / softmax_temp
+                    probs  = torch.nn.Softmax(dim=1)(energy)
+
+                    top_k = torch.topk(probs, 10)
+
+                    indices = top_k.indices
+                    values  = top_k.values
+                    values  = values / torch.sum(values)
+                    values  = values.reshape(-1, 1)
+                    top_k_coords = coords[indices][0]
+                    prediction = torch.sum(values * top_k_coords, dim=0)
 
                     
-                    # coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
-                    # coords = coords.reshape(-1, 2)
-                    # coords = torch.from_numpy(coords).cuda()
+                    # for i in range(0, 3):
 
-                    # energy = model(images, coords)
-                    # energy = energy * -1.0 / softmax_temp
-                    # probs  = torch.nn.Softmax(dim=1)(energy)
+                    #     # x = np.random.normal(mu[0], std[0], 16384)
+                    #     # y = np.random.normal(mu[1], std[1], 16384)
 
-                    # top_k = torch.topk(probs, 10)
+                    #     # x = np.minimum(np.maximum(x, 0.0),1.0)
+                    #     # y = np.minimum(np.maximum(y, 0.0),1.0)
 
-                    # indices = top_k.indices
-                    # values  = top_k.values
-                    # values  = values / torch.sum(values)
-                    # values  = values.reshape(-1, 1)
-                    # top_k_coords = coords[indices][0]
-                    # prediction = torch.sum(values * top_k_coords, dim=0)
+                    #     coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
+                    #     coords = coords.reshape(-1, 2)
+                    #     coords = torch.from_numpy(coords).cuda()
 
-                    
-                    for i in range(0, 3):
-
-                        # x = np.random.normal(mu[0], std[0], 16384)
-                        # y = np.random.normal(mu[1], std[1], 16384)
-
-                        # x = np.minimum(np.maximum(x, 0.0),1.0)
-                        # y = np.minimum(np.maximum(y, 0.0),1.0)
-
-                        coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
-                        coords = coords.reshape(-1, 2)
-                        coords = torch.from_numpy(coords).cuda()
-
-                        energy = model(images, coords)
-                        energy = energy * -1.0 / softmax_temp
-                        probs  = torch.nn.Softmax(dim=1)(energy)
+                    #     energy = model(images, coords)
+                    #     energy = energy * -1.0 / softmax_temp
+                    #     probs  = torch.nn.Softmax(dim=1)(energy)
                         
-                        sample_ind = torch.multinomial(probs.squeeze(0), 16384, replacement=True)
-                        # import ipdb; ipdb.set_trace();
-                        new_coords = coords[sample_ind]
-                        # import ipdb; ipdb.set_trace();
-                        new_coords = new_coords.cpu().detach().numpy()
+                    #     sample_ind = torch.multinomial(probs.squeeze(0), 16384, replacement=True)
+                    #     # import ipdb; ipdb.set_trace();
+                    #     new_coords = coords[sample_ind]
+                    #     # import ipdb; ipdb.set_trace();
+                    #     new_coords = new_coords.cpu().detach().numpy()
                         
-                        x = (new_coords[:, 0]+1)/2 + np.random.normal(0, 0.33 * 0.5 ** i)
-                        y = (new_coords[:, 1]+1)/2 + np.random.normal(0, 0.33 * 0.5 ** i)
+                    #     x = (new_coords[:, 0]+1)/2 #+ np.random.normal(0, 0.33 * 0.5 ** i)
+                    #     y = (new_coords[:, 1]+1)/2 #+ np.random.normal(0, 0.33 * 0.5 ** i)
 
-                        x = np.minimum(np.maximum(x, 0.0),1.0)
-                        y = np.minimum(np.maximum(y, 0.0),1.0)
+                    #     x = np.minimum(np.maximum(x, 0.0),1.0)
+                    #     y = np.minimum(np.maximum(y, 0.0),1.0)
 
                         
-                        top_k = torch.topk(probs, 10)
+                    #     top_k = torch.topk(probs, 10)
 
-                        indices = top_k.indices
-                        values  = top_k.values
-                        values  = values / torch.sum(values)
-                        values  = values.reshape(-1, 1)
-                        top_k_coords = coords[indices][0]
+                    #     indices = top_k.indices
+                    #     values  = top_k.values
+                    #     values  = values / torch.sum(values)
+                    #     values  = values.reshape(-1, 1)
+                    #     top_k_coords = coords[indices][0]
 
                         
-                        prediction = top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
+                    #     prediction = top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
 
                         # top_k_coords_01 = (top_k_coords.clone()+1)/2.0
                         # # import ipdb; ipdb.set_trace();
@@ -275,6 +274,7 @@ def run(mode):
                     # prediction = torch.sum(values * top_k_coords, dim=0)
                     xy_pred = prediction.cpu().detach().numpy()
                     xy_pred = (xy_pred+1)/2.0 * 128 
+                    xy_pred = (xy_pred+0.5).astype(int)
 
                     xy_gt = elem['annotations'].cpu().detach().numpy()
 

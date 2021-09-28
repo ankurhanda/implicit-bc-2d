@@ -107,11 +107,20 @@ class ImplicitCNN(BaseCNN):
 
         self.spatial_softmax = spatial_softmax_2d(heatmap_width=16, heatmap_height=16)
 
+        self.mlp_action = nn.Sequential(nn.Linear(2, 64))
+        self.mlp_image  = nn.Sequential(nn.Linear(2*256, 64))
+
         self.mlp = nn.Sequential(
-            nn.Linear(2*256+2, 512),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(512, 1)
+            nn.Linear(64, 1)
         )
+
+        # self.mlp = nn.Sequential(
+        #     nn.Linear(2*256+2, 512),
+        #     nn.ReLU(),
+        #     nn.Linear(512, 1)
+        # )
 
     def forward(self, x, coords):
         batch_size = x.shape[0]
@@ -123,9 +132,18 @@ class ImplicitCNN(BaseCNN):
         out = out.view(batch_size, -1)
 
         out_tile = out.tile((coords_batch_size, 1))
+        
+        out = self.mlp_image(out_tile)
+        coords_out = self.mlp_action(coords)
+        out = torch.cat((out, coords_out), dim=1)
+        out = self.mlp(out)
+        out = out.view(1, -1)
+
+        '''
         out = torch.cat((out_tile, coords), dim=1)
 
         out = self.mlp(out)
         out = out.view(1, -1)
+        '''
 
         return out
