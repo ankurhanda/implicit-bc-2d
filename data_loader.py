@@ -34,7 +34,7 @@ class ImplicitBCDataset_2D(Dataset):
         self.width        = self.img_size[1]
 
         if self.fixed_seed:
-            set_seed(seed=91)
+            set_seed(seed=23)
 
         '''
         Generate possible random keypoint locations 
@@ -50,8 +50,6 @@ class ImplicitBCDataset_2D(Dataset):
                 x = np.random.rand(1)
                 y = np.random.rand(1)
                 
-                # import ipdb; ipdb.set_trace();
-
                 x = int(x * self.width -1)
                 y = int(y * self.height-1)
 

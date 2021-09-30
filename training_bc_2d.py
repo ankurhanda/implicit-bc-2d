@@ -1,7 +1,6 @@
-import os
-import multiprocessing
 from PIL import Image
 import numpy as np 
+import time 
 
 import torch
 import torchvision
@@ -9,7 +8,7 @@ from torchvision import models, transforms
 from torch.utils.data import DataLoader, Dataset
 
 import pytorch_lightning as pl
-import csv
+from einops import rearrange
 import fire 
 
 
@@ -136,7 +135,7 @@ def run(mode):
     from pytorch_lightning.callbacks import ModelCheckpoint
     import cv2
 
-    EPOCHS = 2500
+    EPOCHS = 100
 
     if mode == 'train':
 
@@ -173,7 +172,7 @@ def run(mode):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=494.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=1055.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
@@ -206,68 +205,74 @@ def run(mode):
                     x = np.random.rand(16384)
                     y = np.random.rand(16384)
                     
-                    coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
-                    coords = coords.reshape(-1, 2)
-                    coords = torch.from_numpy(coords).cuda()
-
-                    energy = model(images, coords)
-                    energy = energy * -1.0 / softmax_temp
-                    probs  = torch.nn.Softmax(dim=1)(energy)
-
-                    top_k = torch.topk(probs, 10)
-
-                    indices = top_k.indices
-                    values  = top_k.values
-                    values  = values / torch.sum(values)
-                    values  = values.reshape(-1, 1)
-                    top_k_coords = coords[indices][0]
-                    prediction = torch.sum(values * top_k_coords, dim=0)
-
+                    cv_np_img = images.clone().cpu().detach().numpy()
+                    cv_np_img = rearrange(cv_np_img, 'b c h w -> b h w c')
+                    cv_np_img = cv_np_img[0]
                     
-                    # for i in range(0, 10):
+                    for i in range(0, 10):
 
-                    #     # x = np.random.normal(mu[0], std[0], 16384)
-                    #     # y = np.random.normal(mu[1], std[1], 16384)
+                        coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
+                        coords = coords.transpose(-1, 0)
+                        coords = torch.from_numpy(coords).cuda()
 
-                    #     # x = np.minimum(np.maximum(x, 0.0),1.0)
-                    #     # y = np.minimum(np.maximum(y, 0.0),1.0)
+                        energy = model(images, coords)
+                        energy = energy * -1.0 / softmax_temp
+                        probs  = torch.nn.Softmax(dim=1)(energy)
 
-                    #     coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
-                    #     coords = coords.reshape(-1, 2)
-                    #     coords = torch.from_numpy(coords).cuda()
+                        top_k = torch.topk(probs, 10)
 
-                    #     energy = model(images, coords)
-                    #     energy = energy * -1.0 / softmax_temp
-                    #     probs  = torch.nn.Softmax(dim=1)(energy)
+                        indices = top_k.indices
+                        values  = top_k.values
+                        values  = values / torch.sum(values)
+                        values  = values.reshape(-1, 1)
+                        top_k_coords = coords[indices][0]
                         
-                    #     sample_ind = torch.multinomial(probs.squeeze(0), 16384, replacement=True)
-                    #     # import ipdb; ipdb.set_trace();
-                    #     new_coords = coords[sample_ind]
-                    #     # import ipdb; ipdb.set_trace();
-                    #     new_coords = new_coords.cpu().detach().numpy()
+                        # import ipdb; ipdb.set_trace();
+                        sample_ind = torch.multinomial(probs.squeeze(0), 16384, replacement=True)
+                        # sample_ind = torch.multinomial(values.squeeze(1), 16384, replacement=True)
+                        new_coords = coords[sample_ind] #top_k_coords[sample_ind] #coords[sample_ind]
+                        new_coords = new_coords.cpu().detach().numpy()
                         
-                    #     x = (new_coords[:, 0]+1)/2 #+ np.random.normal(0, 0.33 * 0.5 ** i)
-                    #     y = (new_coords[:, 1]+1)/2 #+ np.random.normal(0, 0.33 * 0.5 ** i)
+                        x = (new_coords[:, 0]+1)/2 * 128 + np.random.normal(0, 0.33 * 0.5 ** i)
+                        y = (new_coords[:, 1]+1)/2 * 128 + np.random.normal(0, 0.33 * 0.5 ** i)
 
-                    #     x = np.minimum(np.maximum(x, 0.0),1.0)
-                    #     y = np.minimum(np.maximum(y, 0.0),1.0)
+                        x = x / 128.0
+                        y = y / 128.0
 
+                        x = np.minimum(np.maximum(x, 0.0),1.0)
+                        y = np.minimum(np.maximum(y, 0.0),1.0)
                         
-                    #     top_k = torch.topk(probs, 10)
+                        # top_k = torch.topk(probs, 10)
 
-                    #     indices = top_k.indices
-                    #     values  = top_k.values
-                    #     values  = values / torch.sum(values)
-                    #     values  = values.reshape(-1, 1)
-                    #     top_k_coords = coords[indices][0]
+                        # indices = top_k.indices
+                        # values  = top_k.values
+                        # values  = values / torch.sum(values)
+                        # values  = values.reshape(-1, 1)
+                        # top_k_coords = coords[indices][0]
 
-                        
-                    #     prediction = top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
+                        prediction = top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
 
-                    #     # top_k_coords_01 = (top_k_coords.clone()+1)/2.0
-                    #     # # import ipdb; ipdb.set_trace();
-                    #     # mu = torch.mean(top_k_coords_01, dim=0).cpu().detach().numpy()
-                    #     # std= torch.std(top_k_coords_01, dim=0).cpu().detach().numpy()
+                        # cv_np_img = images.clone().cpu().detach().numpy()
+                        # cv_np_img = rearrange(cv_np_img, 'b c h w -> b h w c')
+                        # cv_np_img = cv_np_img[0]
+
+                        # cpu_coords = new_coords #new_coords.clone().cpu().detach().numpy()
+                        # for xx, yy in cpu_coords:
+                        #     yy = ( yy + 1 ) / 2 * cv_np_img.shape[0]# + np.random.normal(0, 0.33)
+                        #     xx = ( xx + 1 ) / 2 * cv_np_img.shape[1]# + np.random.normal(0, 0.33)
+                        #     cv_np_img = cv2.circle(np.ascontiguousarray(cv_np_img), (int(xx), int(yy)), radius=1, color=(0,255,0), thickness=-1)
+
+                        # cv2.namedWindow('Align Example', cv2.WINDOW_AUTOSIZE)
+                        # cv2.imshow('Align Example', cv_np_img[...,::-1])
+                        # key = cv2.waitKey(1)
+
+                        # time.sleep(3)
+
+                        # # Press esc or 'q' to close the image window
+                        # if key & 0xFF == ord('q') or key == 27:
+                        #     cv2.destroyAllWindows()
+                        #     break
+
                         
                         
 
