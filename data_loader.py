@@ -25,7 +25,7 @@ class ImplicitBCDataset_2D(Dataset):
     img_size: Tuple[int, int] 
     fixed_seed:bool = field(default=True)
     mode: str = field(default='train')
-    neg_pairs: float = field(default=99) # it will be 9 + 1 positive pair 
+    neg_pairs: float = field(default=99) # it will be 99 + 1 positive pair 
  
     def __post_init__(self):
         super(ImplicitBCDataset_2D).__init__()
@@ -40,7 +40,6 @@ class ImplicitBCDataset_2D(Dataset):
         Generate possible random keypoint locations 
         '''
         self.keypts_xy = []
-        offset = 20
         if self.mode == 'train':
             self.keypts_xy = np.loadtxt('training_dataset.txt')
         else:
@@ -52,9 +51,6 @@ class ImplicitBCDataset_2D(Dataset):
                 
                 x = int(x * self.width -1)
                 y = int(y * self.height-1)
-
-                # x = np.random.randint(self.width/2-offset, self.width/2+offset)
-                # y = np.random.randint(self.height/2-offset, self.height/2+offset)
 
                 self.keypts_xy.append([x, y])
 

@@ -218,14 +218,6 @@ def run(mode):
                         energy = model(images, coords)
                         energy = energy * -1.0 / softmax_temp
                         probs  = torch.nn.Softmax(dim=1)(energy)
-
-                        top_k = torch.topk(probs, 10)
-
-                        indices = top_k.indices
-                        values  = top_k.values
-                        values  = values / torch.sum(values)
-                        values  = values.reshape(-1, 1)
-                        top_k_coords = coords[indices][0]
                         
                         # import ipdb; ipdb.set_trace();
                         sample_ind = torch.multinomial(probs.squeeze(0), 16384, replacement=True)
@@ -241,16 +233,17 @@ def run(mode):
 
                         x = np.minimum(np.maximum(x, 0.0),1.0)
                         y = np.minimum(np.maximum(y, 0.0),1.0)
+
+                        top_k = torch.topk(probs, 10)
+
+                        indices = top_k.indices
+                        values  = top_k.values
+                        values  = values / torch.sum(values)
+                        values  = values.reshape(-1, 1)
+                        top_k_coords = coords[indices][0]
+
                         
-                        # top_k = torch.topk(probs, 10)
-
-                        # indices = top_k.indices
-                        # values  = top_k.values
-                        # values  = values / torch.sum(values)
-                        # values  = values.reshape(-1, 1)
-                        # top_k_coords = coords[indices][0]
-
-                        prediction = top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
+                        prediction = torch.sum(values * top_k_coords, dim=0) #top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
 
                         # cv_np_img = images.clone().cpu().detach().numpy()
                         # cv_np_img = rearrange(cv_np_img, 'b c h w -> b h w c')
