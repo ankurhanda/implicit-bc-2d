@@ -81,7 +81,7 @@ class ImplicitBCDataset_2D(Dataset):
         results['images'] = self.transform(img) 
 
         results['annotations'] = np.array([x, y], dtype=np.float32)
-        results['normalised_annotations'] = np.array([[2*normalised_x-1, 2*normalised_y-1]], dtype=np.float32)
+        results['normalised_annotations'] = np.array([2*normalised_x-1, 2*normalised_y-1], dtype=np.float32)
 
         xy_neg = np.random.rand(self.neg_pairs, 2)
         results['normalised_negatives'] = np.array(2*xy_neg-1.0, dtype=np.float32)
@@ -89,8 +89,8 @@ class ImplicitBCDataset_2D(Dataset):
         print(results['normalised_annotations'].shape)
         print(results['normalised_negatives'].shape)
 
-        xy_pos_neg = np.concatenate((results['normalised_annotations'], results['normalised_negatives']), axis=0)
-        results['normalised_positives_negatives'] = xy_pos_neg
+        # xy_pos_neg = np.concatenate((results['normalised_annotations'], results['normalised_negatives']), axis=0)
+        # results['normalised_positives_negatives'] = xy_pos_neg
 
         return results
 
