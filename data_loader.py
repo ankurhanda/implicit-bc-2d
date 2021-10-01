@@ -44,17 +44,13 @@ class ImplicitBCDataset_2D(Dataset):
             self.keypts_xy = np.loadtxt('training_dataset.txt')
         else:
 
-            for i in range(self.dataset_size):
+            xy = np.random.rand(self.dataset_size, 2)
+            xy[:, 0] = xy[:, 0]*self.width - 1 
+            xy[:, 1] = xy[:, 1]*self.height - 1 
 
-                x = np.random.rand(1)
-                y = np.random.rand(1)
-                
-                x = int(x * self.width -1)
-                y = int(y * self.height-1)
+            self.keypts_xy = np.array(xy.astype(int))
 
-                self.keypts_xy.append([x, y])
-
-            np.savetxt('{}_dataset.txt'.format(self.mode), np.array(self.keypts_xy))
+            np.savetxt('{}_dataset.txt'.format(self.mode), self.keypts_xy)
         
         print(self.keypts_xy)
 
