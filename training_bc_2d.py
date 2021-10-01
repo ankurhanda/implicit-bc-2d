@@ -59,6 +59,11 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
             
             xy_negative_samples_normalised = batch['normalised_negatives'][0]
             xy_pos_neg = torch.cat((xy_ground_truth_normalised, xy_negative_samples_normalised), dim=0)
+
+            '''
+            The gt label is at the 0th index but to avoid possible overfitting we can randomise 
+            the position of the gt lable by randomly permuting the tensor.
+            '''
             perm = torch.randperm(xy_pos_neg.shape[0]).cuda()
             xy_pos_neg = xy_pos_neg[perm]
 
@@ -67,7 +72,7 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
 
             energy = self.forward(source_views, xy_pos_neg)
             energy = energy * -1.0 / softmax_temp 
-            target = torch.zeros(1, dtype=torch.long, device=energy.device)
+            # target = torch.zeros(1, dtype=torch.long, device=energy.device)
             loss = self.loss(energy, idx) #target)
         
         self.log('loss_train', loss)
