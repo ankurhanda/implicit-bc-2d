@@ -4,7 +4,7 @@ The repo containes a 2D example of implicit behaviour cloning. The task is regre
 
 ![image info](./images_for_readme/implicit_training.png)
 
-** Requirements ** 
+ ## Requirements 
 
 - pytorch-lightning
 - einops
