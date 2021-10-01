@@ -134,7 +134,7 @@ import hydra
 
 # @hydra.main(config_path=".", config_name="hydra_config")
 # def run(cfg):
-def run(mode):
+def run(mode, visualise=False):
 
     # mode = cfg.mode
 
@@ -251,26 +251,28 @@ def run(mode):
                         
                         prediction = torch.sum(values * top_k_coords, dim=0)
 
-                        # cv_np_img = images.clone().cpu().detach().numpy()
-                        # cv_np_img = rearrange(cv_np_img, 'b c h w -> b h w c')
-                        # cv_np_img = cv_np_img[0]
+                        if visualise:
 
-                        # cpu_coords = new_coords #new_coords.clone().cpu().detach().numpy()
-                        # for xx, yy in cpu_coords:
-                        #     yy = ( yy + 1 ) / 2 * cv_np_img.shape[0]# + np.random.normal(0, 0.33)
-                        #     xx = ( xx + 1 ) / 2 * cv_np_img.shape[1]# + np.random.normal(0, 0.33)
-                        #     cv_np_img = cv2.circle(np.ascontiguousarray(cv_np_img), (int(xx), int(yy)), radius=1, color=(0,255,0), thickness=-1)
+                            cv_np_img = images.clone().cpu().detach().numpy()
+                            cv_np_img = rearrange(cv_np_img, 'b c h w -> b h w c')
+                            cv_np_img = cv_np_img[0]
 
-                        # cv2.namedWindow('Align Example', cv2.WINDOW_AUTOSIZE)
-                        # cv2.imshow('Align Example', cv_np_img[...,::-1])
-                        # key = cv2.waitKey(1)
+                            # cpu_coords = new_coords 
+                            for xx, yy in zip(x, y):
+                                yy = ( yy ) * cv_np_img.shape[0]
+                                xx = ( xx ) * cv_np_img.shape[1]
+                                cv_np_img = cv2.circle(np.ascontiguousarray(cv_np_img), (int(xx), int(yy)), radius=1, color=(0,255,0), thickness=-1)
 
-                        # time.sleep(3)
+                            cv2.namedWindow('Align Example', cv2.WINDOW_AUTOSIZE)
+                            cv2.imshow('Align Example', cv_np_img[...,::-1])
+                            key = cv2.waitKey(1)
 
-                        # # Press esc or 'q' to close the image window
-                        # if key & 0xFF == ord('q') or key == 27:
-                        #     cv2.destroyAllWindows()
-                        #     break
+                            time.sleep(3)
+
+                            # Press esc or 'q' to close the image window
+                            if key & 0xFF == ord('q') or key == 27:
+                                cv2.destroyAllWindows()
+                                break
 
                         
                     xy_pred = prediction.cpu().detach().numpy()
