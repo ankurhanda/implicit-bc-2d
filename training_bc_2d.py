@@ -244,7 +244,7 @@ def run(mode):
                         values  = values.reshape(-1, 1)
                         top_k_coords = coords[indices][0]
                         
-                        prediction = torch.sum(values * top_k_coords, dim=0) #top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
+                        prediction = torch.sum(values * top_k_coords, dim=0)
 
                         # cv_np_img = images.clone().cpu().detach().numpy()
                         # cv_np_img = rearrange(cv_np_img, 'b c h w -> b h w c')
@@ -268,9 +268,6 @@ def run(mode):
                         #     break
 
                         
-                        
-
-                    # prediction = torch.sum(values * top_k_coords, dim=0)
                     xy_pred = prediction.cpu().detach().numpy()
                     xy_pred = (xy_pred+1)/2.0 * 128 
                     xy_pred = (xy_pred+0.5).astype(int)
