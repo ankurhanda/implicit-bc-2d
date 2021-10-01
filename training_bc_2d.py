@@ -59,6 +59,8 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
             
             xy_negative_samples_normalised = batch['normalised_negatives'][0]
             xy_pos_neg = torch.cat((xy_ground_truth_normalised, xy_negative_samples_normalised), dim=0)
+            # xy_pos_neg = batch['normalised_positives_negatives']
+            # import ipdb; ipdb.set_trace();
 
             '''
             The gt label is at the 0th index but to avoid possible overfitting we can randomise 
