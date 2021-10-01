@@ -9,8 +9,9 @@ from torch.utils.data import DataLoader, Dataset
 
 import pytorch_lightning as pl
 from einops import rearrange
-import fire 
+from einops.layers.torch import Rearrange
 
+import fire 
 
 import torch.nn as nn 
 import torch.nn.functional as F
@@ -58,14 +59,17 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
             
             xy_negative_samples_normalised = batch['normalised_negatives'][0]
             xy_pos_neg = torch.cat((xy_ground_truth_normalised, xy_negative_samples_normalised), dim=0)
+            perm = torch.randperm(xy_pos_neg.shape[0]).cuda()
+            xy_pos_neg = xy_pos_neg[perm]
+
+            idx = (perm==0).nonzero()[0]
+            # import ipdb; ipdb.set_trace();
 
             energy = self.forward(source_views, xy_pos_neg)
-            # import ipdb; ipdb.set_trace();
             energy = energy * -1.0 / softmax_temp 
             target = torch.zeros(1, dtype=torch.long, device=energy.device)
-            loss = self.loss(energy, target)
+            loss = self.loss(energy, idx) #target)
         
-        # import ipdb; ipdb.set_trace();
         self.log('loss_train', loss)
         self.log('epoch', self.current_epoch)
 
@@ -135,7 +139,7 @@ def run(mode):
     from pytorch_lightning.callbacks import ModelCheckpoint
     import cv2
 
-    EPOCHS = 100
+    EPOCHS = 2000
 
     if mode == 'train':
 
@@ -172,7 +176,7 @@ def run(mode):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=1055.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=1597.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
@@ -212,21 +216,19 @@ def run(mode):
                     for i in range(0, 10):
 
                         coords = np.array([2*x-1, 2*y-1], dtype=np.float32)
-                        coords = coords.transpose(-1, 0)
+                        coords = Rearrange('c b -> b c')(coords)
                         coords = torch.from_numpy(coords).cuda()
 
                         energy = model(images, coords)
                         energy = energy * -1.0 / softmax_temp
                         probs  = torch.nn.Softmax(dim=1)(energy)
                         
-                        # import ipdb; ipdb.set_trace();
                         sample_ind = torch.multinomial(probs.squeeze(0), 16384, replacement=True)
-                        # sample_ind = torch.multinomial(values.squeeze(1), 16384, replacement=True)
-                        new_coords = coords[sample_ind] #top_k_coords[sample_ind] #coords[sample_ind]
+                        new_coords = coords[sample_ind] 
                         new_coords = new_coords.cpu().detach().numpy()
                         
-                        x = (new_coords[:, 0]+1)/2 * 128 + np.random.normal(0, 0.33 * 0.5 ** i)
-                        y = (new_coords[:, 1]+1)/2 * 128 + np.random.normal(0, 0.33 * 0.5 ** i)
+                        x = (new_coords[:, 0]+1)/2 * 128 + np.random.normal(0, 0.33 * 0.9 ** i)
+                        y = (new_coords[:, 1]+1)/2 * 128 + np.random.normal(0, 0.33 * 0.9 ** i)
 
                         x = x / 128.0
                         y = y / 128.0
@@ -241,7 +243,6 @@ def run(mode):
                         values  = values / torch.sum(values)
                         values  = values.reshape(-1, 1)
                         top_k_coords = coords[indices][0]
-
                         
                         prediction = torch.sum(values * top_k_coords, dim=0) #top_k_coords[0] #torch.sum(values * top_k_coords, dim=0)
 
