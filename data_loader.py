@@ -9,6 +9,8 @@ from torchvision import transforms
 import cv2 
 from typing import List, Tuple
 
+from einops import rearrange
+
 def set_seed(seed=91):
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -86,11 +88,9 @@ class ImplicitBCDataset_2D(Dataset):
         xy_neg = np.random.rand(self.neg_pairs, 2)
         results['normalised_negatives'] = np.array(2*xy_neg-1.0, dtype=np.float32)
 
-        print(results['normalised_annotations'].shape)
-        print(results['normalised_negatives'].shape)
-
-        # xy_pos_neg = np.concatenate((results['normalised_annotations'], results['normalised_negatives']), axis=0)
-        # results['normalised_positives_negatives'] = xy_pos_neg
+        xy_normalised_anno = rearrange(results['normalised_annotations'], 'c -> 1 c', c=2)
+        xy_pos_neg = np.concatenate((xy_normalised_anno, results['normalised_negatives']), axis=0)
+        results['normalised_positives_negatives'] = xy_pos_neg
 
         return results
 
