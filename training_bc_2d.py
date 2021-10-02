@@ -57,25 +57,29 @@ class ImplicitBC_2d_Learner(pl.LightningModule):
             loss = self.loss(xy_pred_normalised, xy_ground_truth_normalised)
         else:
             
-            xy_negative_samples_normalised = batch['normalised_negatives'][0]
-            xy_pos_neg = torch.cat((xy_ground_truth_normalised, xy_negative_samples_normalised), dim=0)
-            # xy_pos_neg = batch['normalised_positives_negatives']
+            xy_pos_neg = batch['normalised_positives_negatives']
+            batch_size = xy_pos_neg.shape[0]
+            # perm = batch['random_perm']
             # import ipdb; ipdb.set_trace();
+
 
             '''
             The gt label is at the 0th index but to avoid possible overfitting we can randomise 
             the position of the gt lable by randomly permuting the tensor.
             '''
-            perm = torch.randperm(xy_pos_neg.shape[0]).cuda()
-            xy_pos_neg = xy_pos_neg[perm]
+            # perm = torch.randperm(xy_pos_neg.shape[0]).cuda()
+            # import ipdb; ipdb.set_trace();
+            # xy_pos_neg = xy_pos_neg[perm]
 
-            idx = (perm==0).nonzero()[0]
+            # idx = (perm==0).nonzero()
             # import ipdb; ipdb.set_trace();
 
             energy = self.forward(source_views, xy_pos_neg)
+            # import ipdb; ipdb.set_trace();
+
             energy = energy * -1.0 / softmax_temp 
-            # target = torch.zeros(1, dtype=torch.long, device=energy.device)
-            loss = self.loss(energy, idx) #target)
+            target = torch.zeros(batch_size, dtype=torch.long, device=energy.device)
+            loss = self.loss(energy, target)
         
         self.log('loss_train', loss)
         self.log('epoch', self.current_epoch)
@@ -146,16 +150,16 @@ def run(mode, visualise=False):
     from pytorch_lightning.callbacks import ModelCheckpoint
     import cv2
 
-    EPOCHS = 2000
+    EPOCHS = 2#000
 
     if mode == 'train':
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=10,
                                                   img_size=(128, 128))
             
-        train_loader = DataLoader(implicit_bc_dataset_2d, batch_size=1, 
+        train_loader = DataLoader(implicit_bc_dataset_2d, batch_size=4, 
                                             num_workers=12, shuffle=True, 
-                                            pin_memory=True, drop_last=False) 
+                                            pin_memory=True, drop_last=True) 
 
         model = ImplicitBC_2d_Learner()
 
@@ -183,7 +187,7 @@ def run(mode, visualise=False):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=1597.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=001.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,

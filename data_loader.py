@@ -92,6 +92,8 @@ class ImplicitBCDataset_2D(Dataset):
         xy_pos_neg = np.concatenate((xy_normalised_anno, results['normalised_negatives']), axis=0)
         results['normalised_positives_negatives'] = xy_pos_neg
 
+        results['random_perm'] = np.random.permutation(self.neg_pairs+1)
+
         return results
 
 if __name__ == "__main__":

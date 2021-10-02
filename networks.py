@@ -127,20 +127,29 @@ class ImplicitCNN(BaseCNN):
 
     def forward(self, x, coords):
         batch_size = x.shape[0]
-        coords_batch_size = coords.shape[0]
+        if coords.ndim == 3:
+            num_coords = coords.shape[1]
+        else:
+            num_coords = coords.shape[0]
 
         out = self.cnn(x)
 
         out = self.spatial_softmax(out)
         out = out.view(batch_size, -1)
 
-        out_tile = out.tile((coords_batch_size, 1))
+        if coords.ndim==2:
+            out_tile = out.tile((num_coords, 1))
+        else:
+            out_tile = out.tile((1, num_coords)).reshape(batch_size*num_coords, -1)
+            coords = coords.reshape(batch_size*num_coords, 2)
         
         out = self.mlp_image(out_tile)
         coords_out = self.mlp_action(coords)
+        
         out = torch.cat((out, coords_out), dim=1)
         out = self.mlp(out)
-        out = out.view(1, -1)
+
+        out = out.view(batch_size, -1)
 
         '''
         out = torch.cat((out_tile, coords), dim=1)
