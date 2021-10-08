@@ -47,7 +47,7 @@ class ImplicitBCDataset_2D(Dataset):
         else:
 
             xy = np.random.rand(self.dataset_size, 2)
-            xy[:, 0] = xy[:, 0]*self.width - 1 
+            xy[:, 0] = xy[:, 0]*self.width  - 1 
             xy[:, 1] = xy[:, 1]*self.height - 1 
 
             self.keypts_xy = np.array(xy.astype(int))

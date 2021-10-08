@@ -150,14 +150,14 @@ def run(mode, visualise=False):
     from pytorch_lightning.callbacks import ModelCheckpoint
     import cv2
 
-    EPOCHS = 2#000
+    EPOCHS = 2000
 
     if mode == 'train':
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=10,
                                                   img_size=(128, 128))
             
-        train_loader = DataLoader(implicit_bc_dataset_2d, batch_size=4, 
+        train_loader = DataLoader(implicit_bc_dataset_2d, batch_size=1, 
                                             num_workers=12, shuffle=True, 
                                             pin_memory=True, drop_last=True) 
 
@@ -187,7 +187,7 @@ def run(mode, visualise=False):
     
     elif mode == 'test':
 
-        model_path = 'trained_models/sample-loss-epoch=001.ckpt'
+        model_path = 'trained_models/sample-loss-epoch=746.ckpt'
         print('****** testing model ', model_path)
 
         implicit_bc_dataset_2d = ImplicitBCDataset_2D(dataset_size=1000,
